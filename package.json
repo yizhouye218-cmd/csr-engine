@@ -1,0 +1,8 @@
+{
+  "name": "csr-creative-engine",
+  "version": "1.0.0",
+  "description": "游戏×公益 CSR创意引擎",
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}

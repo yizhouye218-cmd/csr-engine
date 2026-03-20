@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CSR创意引擎 — 游戏×公益</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #ffffff;
+    --surface: #f5f7fa;
+    --surface2: #eef1f6;
+    --border: rgba(0,0,0,0.1);
+    --blue: #1a6fd4;
+    --blue-dim: rgba(26,111,212,0.1);
+    --cyan: #0099aa;
+    --cyan-dim: rgba(0,153,170,0.1);
+    --gold: #b8860b;
+    --gold-dim: rgba(184,134,11,0.1);
+    --text: #0d0d0d;
+    --text-muted: #444a56;
+    --text-dim: #aab0bc;
+    --red: #cc2233;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
+  .orb-1 { width: 500px; height: 500px; background: rgba(26,111,212,0.05); top: -100px; left: -100px; }
+  .orb-2 { width: 400px; height: 400px; background: rgba(0,153,170,0.04); bottom: 0; right: 0; }
+
+  header {
+    position: relative; z-index: 10;
+    padding: 2rem 3rem;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { display: flex; align-items: center; gap: 0.75rem; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.05rem; }
+  .logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--blue), var(--cyan)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: white; }
+  .logo-badge { font-family: 'Noto Sans SC', sans-serif; font-size: 0.6rem; font-weight: 400; letter-spacing: 0.1em; color: var(--cyan); border: 1px solid var(--cyan); padding: 0.15rem 0.5rem; border-radius: 100px; opacity: 0.8; }
+  .header-tag { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); }
+
+  .hero { position: relative; z-index: 10; padding: 4rem 3rem 3rem; max-width: 860px; }
+  .hero-eyebrow { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cyan); margin-bottom: 1.5rem; }
+  .hero-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--cyan); }
+  .hero-title { font-family: 'Syne', sans-serif; font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 800; line-height: 1.05; letter-spacing: -0.03em; margin-bottom: 1.2rem; }
+  .hero-title .accent-blue { color: var(--blue); }
+  .hero-title .accent-gold { color: var(--gold); }
+  .hero-desc { font-size: 0.88rem; line-height: 1.8; color: var(--text-muted); max-width: 52ch; }
+
+  .input-section { position: relative; z-index: 10; padding: 0 3rem 3rem; }
+  .input-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; max-width: 860px; }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  .input-group.full { grid-column: span 2; }
+  .input-label { font-size: 1.24rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text); font-weight: 600; }
+  .input-field { background: #ffffff; border: 1.5px solid var(--border); border-radius: 8px; padding: 0.75rem 1rem; font-family: 'Noto Sans SC', sans-serif; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s, box-shadow 0.2s; width: 100%; }
+  .input-field::placeholder { color: var(--text-dim); }
+  .input-field:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,111,212,0.08); }
+  textarea.input-field { resize: vertical; min-height: 80px; }
+
+  .tags-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .tag-pill { font-size: 0.68rem; padding: 0.3rem 0.75rem; border-radius: 100px; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.2s; background: transparent; font-family: 'Noto Sans SC', sans-serif; }
+  .tag-pill:hover { background: var(--blue-dim); border-color: var(--blue); color: var(--blue); }
+  .tag-pill.gold:hover { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+  .generate-btn { width: 100%; padding: 0.95rem; background: linear-gradient(135deg, var(--blue), #1a6fd4); border: none; border-radius: 10px; font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: #fff; cursor: pointer; transition: opacity 0.2s, transform 0.15s; display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
+  .generate-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .generate-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .loading-area { position: relative; z-index: 10; padding: 0 3rem 2rem; max-width: 860px; display: none; }
+  .loading-area.visible { display: block; }
+  .loading-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; display: flex; flex-direction: column; gap: 1rem; }
+  .loading-steps { display: flex; flex-direction: column; gap: 0.8rem; }
+  .loading-step { display: flex; align-items: center; gap: 0.75rem; font-size: 0.8rem; color: var(--text-muted); opacity: 0.4; transition: opacity 0.4s; }
+  .loading-step.active { opacity: 1; color: var(--cyan); }
+  .loading-step.done { opacity: 0.7; }
+  .step-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .loading-step.active .step-dot { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(1.5)} }
+  .stream-preview { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.2rem; font-size: 0.75rem; color: var(--text-muted); line-height: 1.7; min-height: 60px; white-space: pre-wrap; word-break: break-all; }
+
+  .results-section { position: relative; z-index: 10; padding: 0 3rem 4rem; max-width: 860px; display: none; }
+  .results-section.visible { display: block; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .results-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+  .results-meta { font-size: 0.65rem; letter-spacing: 0.1em; color: var(--text-muted); }
+  .proposals-grid { display: flex; flex-direction: column; gap: 1.2rem; }
+
+  .proposal-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; animation: cardIn 0.5s ease forwards; opacity: 0; transform: translateY(16px); }
+  .proposal-card:nth-child(2) { animation-delay: 0.1s; }
+  .proposal-card:nth-child(3) { animation-delay: 0.2s; }
+  @keyframes cardIn { to { opacity: 1; transform: translateY(0); } }
+
+  .card-header { padding: 1.4rem 1.6rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 1rem; }
+  .card-number { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; line-height: 1; color: var(--text-dim); flex-shrink: 0; }
+  .card-header-text { flex: 1; }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; line-height: 1.3; }
+  .card-subtitle { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+  .card-badge { flex-shrink: 0; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25rem 0.7rem; border-radius: 100px; }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(26,111,212,0.2); }
+  .badge-cyan { background: var(--cyan-dim); color: var(--cyan); border: 1px solid rgba(0,153,170,0.2); }
+  .badge-gold { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(184,134,11,0.2); }
+
+  .card-body { padding: 1.4rem 1.6rem; }
+  .card-sections { display: flex; flex-direction: column; gap: 1.2rem; }
+  .card-section-label { font-size: 0.6rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--blue); margin-bottom: 0.4rem; }
+  .card-section-content { font-size: 0.82rem; line-height: 1.75; color: var(--text-muted); }
+  .card-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+  .card-tag { font-size: 0.62rem; padding: 0.2rem 0.6rem; border-radius: 4px; background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+  .card-divider { height: 1px; background: var(--border); }
+
+  .error-box { background: rgba(204,34,51,0.06); border: 1px solid rgba(204,34,51,0.2); border-radius: 10px; padding: 1.2rem 1.5rem; font-size: 0.82rem; color: var(--red); line-height: 1.6; display: none; margin: 0 3rem 2rem; max-width: 860px; }
+  .error-box.visible { display: block; }
+
+  footer { position: relative; z-index: 10; padding: 1.5rem 3rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .footer-text { font-size: 0.65rem; color: var(--text-dim); }
+  .footer-text span { color: var(--text-muted); }
+
+  @media (max-width: 680px) {
+    header, .hero, .input-section, .loading-area, .results-section, footer { padding-left: 1.2rem; padding-right: 1.2rem; }
+    .input-row { grid-template-columns: 1fr; }
+    .input-group.full { grid-column: span 1; }
+    .error-box { margin-left: 1.2rem; margin-right: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">✦</div>
+    <span>CSR创意引擎</span>
+    <span class="logo-badge">Beta</span>
+  </div>
+  <span class="header-tag">游戏 × 公益 · 由 AI 驱动</span>
+</header>
+
+<section class="hero">
+  <div class="hero-eyebrow">灵感生成工具</div>
+  <h1 class="hero-title">
+    让<span class="accent-blue">游戏IP</span>的力量<br>
+    照亮<span class="accent-gold">公益世界</span>
+  </h1>
+  <p class="hero-desc">输入游戏内容与核心主题，AI 将为你生成 3 个有血有肉的 CSR 跨界策划灵感方案。</p>
+</section>
+
+<section class="input-section">
+  <div class="input-panel">
+    <div class="input-row">
+      <div class="input-group">
+        <label class="input-label">游戏名称</label>
+        <input class="input-field" id="gameName" type="text" placeholder="例：原神、星穹铁道、崩坏3…"/>
+      </div>
+      <div class="input-group">
+        <label class="input-label">IP核心主题</label>
+        <input class="input-field" id="gameTheme" type="text" placeholder="例：自然探索、宇宙旅途、反抗命运…"/>
+      </div>
+      <div class="input-group full">
+        <label class="input-label">补充说明（可选）</label>
+        <textarea class="input-field" id="extraContext" placeholder="例：希望结合环保领域；目标受众是18-25岁年轻人…"></textarea>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <div class="input-label" style="margin-bottom:0.6rem;font-size:1.24rem;">快速填入示例</div>
+      <div class="tags-row">
+        <button class="tag-pill" onclick="fillPreset('原神','自然·元素·探索','希望结合环保、生物多样性领域，利用旅行者形象')">原神 × 环保</button>
+        <button class="tag-pill" onclick="fillPreset('星穹铁道','旅途·羁绊·星空','关注流浪或留守儿童，传递陪伴与希望')">星铁 × 儿童关怀</button>
+        <button class="tag-pill" onclick="fillPreset('崩坏3','文明·记忆·守护','结合文化遗产保护或非遗传承领域')">崩坏3 × 文化遗产</button>
+        <button class="tag-pill gold" onclick="fillPreset('绝区零','都市·多元·街头','关注城市青年议题，如心理健康或无障碍出行')">绝区零 × 城市议题</button>
+      </div>
+    </div>
+
+    <button class="generate-btn" id="genBtn" onclick="generate()">
+      <span>⚡</span> 生成 CSR 创意方案
+    </button>
+  </div>
+</section>
+
+<div class="loading-area" id="loadingArea">
+  <div class="loading-card">
+    <div class="loading-steps">
+      <div class="loading-step" id="step1"><div class="step-dot"></div>正在解析游戏IP内容…</div>
+      <div class="loading-step" id="step2"><div class="step-dot"></div>分析公益领域与社会议题…</div>
+      <div class="loading-step" id="step3"><div class="step-dot"></div>寻找IP与公益的情感共鸣点…</div>
+      <div class="loading-step" id="step4"><div class="step-dot"></div>生成结构化CSR策划方案…</div>
+    </div>
+    <div class="stream-preview" id="streamPreview">等待生成中…</div>
+  </div>
+</div>
+
+<div class="error-box" id="errorBox"></div>
+
+<section class="results-section" id="resultsSection">
+  <div class="results-header">
+    <div class="results-title">✦ 生成的 CSR 创意方案</div>
+    <div class="results-meta" id="resultsMeta"></div>
+  </div>
+  <div class="proposals-grid" id="proposalsGrid"></div>
+</section>
+
+<footer>
+  <div class="footer-text">CSR 创意引擎 · <span>游戏公司社会责任策划工具</span></div>
+  <div class="footer-text">由 Claude AI 驱动</div>
+</footer>
+
+<script>
+  function fillPreset(name, theme, extra) {
+    document.getElementById('gameName').value = name;
+    document.getElementById('gameTheme').value = theme;
+    document.getElementById('extraContext').value = extra;
+  }
+
+  function setStep(active) {
+    ['step1','step2','step3','step4'].forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.className = 'loading-step';
+      if (i + 1 < active) el.classList.add('done');
+      else if (i + 1 === active) el.classList.add('active');
+    });
+  }
+
+  const badgeClasses = ['badge-blue','badge-cyan','badge-gold'];
+  const badgeLabels = ['核心方案','创新方案','长效方案'];
+
+  function renderProposals(proposals) {
+    const grid = document.getElementById('proposalsGrid');
+    grid.innerHTML = '';
+    proposals.forEach((p, i) => {
+      const card = document.createElement('div');
+      card.className = 'proposal-card';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-number">0${i+1}</div>
+          <div class="card-header-text">
+            <div class="card-title">${p.title || ''}</div>
+            <div class="card-subtitle">${p.subtitle || ''}</div>
+          </div>
+          <div class="card-badge ${badgeClasses[i]}">${badgeLabels[i]}</div>
+        </div>
+        <div class="card-body">
+          <div class="card-sections">
+            <div>
+              <div class="card-section-label">📌 真实公益项目背景</div>
+              <div class="card-section-content">${p.charity_background || ''}</div>
+            </div>
+            <div class="card-divider"></div>
+            <div>
+              <div class="card-section-label">🎮 IP 结合点</div>
+              <div class="card-section-content">${p.ip_connection || ''}</div>
+            </div>
+            <div class="card-divider"></div>
+            <div>
+              <div class="card-section-label">🚀 可落地形式</div>
+              <div class="card-section-content">${p.execution || ''}</div>
+            </div>
+            <div>
+              <div class="card-tags">${(p.tags||[]).map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>
+            </div>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  }
+
+  async function generate() {
+    const gameName = document.getElementById('gameName').value.trim();
+    const gameTheme = document.getElementById('gameTheme').value.trim();
+    const extraContext = document.getElementById('extraContext').value.trim();
+
+    if (!gameName || !gameTheme) { alert('请填写游戏名称和IP核心主题'); return; }
+
+    const btn = document.getElementById('genBtn');
+    const loadingArea = document.getElementById('loadingArea');
+    const resultsSection = document.getElementById('resultsSection');
+    const errorBox = document.getElementById('errorBox');
+    const streamPreview = document.getElementById('streamPreview');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span>⏳</span> 生成中…';
+    loadingArea.classList.add('visible');
+    resultsSection.classList.remove('visible');
+    errorBox.classList.remove('visible');
+    streamPreview.textContent = '正在连接 AI…';
+
+    setStep(1); await delay(500);
+    setStep(2); await delay(600);
+    setStep(3);
+    streamPreview.textContent = '正在分析，请稍候（约15-30秒）…';
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameName, gameTheme, extraContext })
+      });
+
+      setStep(4);
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error || `错误 ${response.status}`);
+
+      const proposals = data.proposals || data;
+      if (!Array.isArray(proposals) || proposals.length === 0) throw new Error('未能获取到有效方案，请重试。');
+
+      loadingArea.classList.remove('visible');
+      resultsSection.classList.add('visible');
+      document.getElementById('resultsMeta').textContent = `${gameName} × 公益 · ${proposals.length} 个方案`;
+      renderProposals(proposals);
+
+    } catch(err) {
+      loadingArea.classList.remove('visible');
+      errorBox.classList.add('visible');
+      errorBox.textContent = '⚠️ 生成失败：' + err.message;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<span>⚡</span> 重新生成';
+    }
+  }
+
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
