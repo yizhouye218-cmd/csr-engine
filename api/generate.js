@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // 只允许 POST 请求
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -37,28 +36,34 @@ ${extraContext ? `补充说明：${extraContext}` : ''}
 请为这个游戏IP生成3个CSR跨界创意策划方案。`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.minimax.chat/v1/text/chatcompletion_v2', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${process.env.MINIMAX_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'abab6.5s-chat',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
         max_tokens: 2000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userPrompt }],
+        temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const err = await response.json();
-      return res.status(response.status).json({ error: err.error?.message || 'API 调用失败' });
+      return res.status(response.status).json({ error: err.base_resp?.status_msg || 'API 调用失败' });
     }
 
     const data = await response.json();
-    const rawText = data.content.map(b => b.type === 'text' ? b.text : '').join('');
+    const rawText = data.choices?.[0]?.message?.content || '';
+
+    if (!rawText) {
+      return res.status(500).json({ error: '未获取到有效响应，请重试' });
+    }
 
     // 提取 JSON
     const match = rawText.match(/\{[\s\S]*\}/);
