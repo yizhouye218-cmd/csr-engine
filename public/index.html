@@ -277,7 +277,7 @@
             <div class="card-divider"></div>
             <div>
               <div class="card-section-label">🚀 可落地形式</div>
-              <div class="card-section-content">${p.execution || ''}</div>
+              <div class="card-section-content">${typeof p.execution === 'object' ? Object.values(p.execution).join('<br><br>') : (p.execution || '')}</div>
             </div>
             <div>
               <div class="card-tags">${(p.tags||[]).map(t=>`<span class="card-tag">${t}</span>`).join('')}</div>
